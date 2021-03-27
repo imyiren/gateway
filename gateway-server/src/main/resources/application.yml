@@ -1,0 +1,38 @@
+server:
+  port: 7100
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+# MyBatis
+mybatis:
+  mapper-locations: classpath:mappers/*xml
+  type-aliases-package: com.example.gateway.dal.entity
+spring:
+  application:
+    name: ${APPLICATION_NAME:gateway-server}
+  datasource:
+    url: jdbc:mysql://${MYSQL_IP:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DB:test}?useSSL=false
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:root}
+  cloud:
+    gateway:
+      enabled: true
+    nacos:
+      discovery:
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+dubbo:
+  protocol:
+    id: dubbo
+    name: dubbo
+    port: 28000
+  cloud:
+    subscribed-services: ${APPLICATION_NAME:gateway-server}
+  scan:
+    base-packages: com.example.gateway
