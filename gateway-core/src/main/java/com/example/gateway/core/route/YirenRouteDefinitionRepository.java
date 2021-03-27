@@ -19,18 +19,16 @@ import javax.annotation.Resource;
 @Slf4j
 @Component
 public class YirenRouteDefinitionRepository implements RouteDefinitionRepository {
-    @Resource
-    private RouteContext routeContext;
 
     @Override
     public Flux<RouteDefinition> getRouteDefinitions() {
-        return Flux.fromIterable(routeContext.getRouteDefinitions());
+        return Flux.fromIterable(RouteContext.getRouteDefinitions());
     }
 
     @Override
     public Mono<Void> save(Mono<RouteDefinition> route) {
         return route.handle((routeDefinition, voidSynchronousSink) -> {
-                    routeContext.save(routeDefinition.getId(), routeDefinition);
+                    RouteContext.save(routeDefinition);
                     voidSynchronousSink.complete();
                 }
         );
@@ -39,7 +37,7 @@ public class YirenRouteDefinitionRepository implements RouteDefinitionRepository
     @Override
     public Mono<Void> delete(Mono<String> routeId) {
         return routeId.handle((id, voidSyncSink) -> {
-            routeContext.remove(id);
+            RouteContext.remove(id);
             voidSyncSink.complete();
         });
     }

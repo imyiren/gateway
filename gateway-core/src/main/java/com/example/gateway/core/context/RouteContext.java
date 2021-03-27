@@ -1,5 +1,7 @@
 package com.example.gateway.core.context;
 
+import com.example.gateway.common.utils.UuidUtils;
+import com.example.gateway.core.route.definition.RouteDefinitionBuilder;
 import com.google.common.collect.Lists;
 import com.sun.jndi.toolkit.url.Uri;
 import lombok.extern.slf4j.Slf4j;
@@ -30,44 +32,33 @@ public class RouteContext {
     private static final Map<String, RouteDefinition> ROUTE_DEFINITION_MAP = new ConcurrentHashMap<>(1 << 16);
 
     static {
-        RouteDefinition routeDefinition = new RouteDefinition();
-        routeDefinition.setId(UUID.randomUUID().toString());
-        try {
-            routeDefinition.setUri(new URI("lb://demo-rest"));
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-        //定义一个断言
-        PredicateDefinition predicate = new PredicateDefinition();
-        predicate.setName("Path");
-        Map<String, String> predicateParams = new HashMap<>(8);
-        predicateParams.put("pattern", "/cc/cc");
-        predicate.setArgs(predicateParams);
-        routeDefinition.setPredicates(Lists.newArrayList(predicate));
-        // 设置过滤器
-        FilterDefinition filterDefinition = new FilterDefinition();
-        filterDefinition.setName("RewritePath");
-        Map<String, String> filterParams = new HashMap<>();
-        filterParams.put("regexp", "/cc/cc");
-        filterParams.put("replacement", "/test");
-        filterDefinition.setArgs(filterParams);
-        routeDefinition.setFilters(Lists.newArrayList(filterDefinition));
-
-        ROUTE_DEFINITION_MAP.put(routeDefinition.getId(), routeDefinition);
-
+        RouteDefinition definition = RouteDefinitionBuilder.builder().id(UuidUtils.generate())
+                .uri("lb://demo-rest")
+                .addPredicate("Path", () -> {
+                    Map<String, String> params = new HashMap<>(8);
+                    params.put("pattern", "/cc/cc");
+                    return params;
+                })
+                .addFilter("RewritePath", () -> {
+                    Map<String, String> params = new HashMap<>();
+                    params.put("regexp", "/cc/cc");
+                    params.put("replacement", "/test");
+                    return params;
+                }).build();
+        save(definition);
     }
 
 
-    public Collection<RouteDefinition> getRouteDefinitions() {
+    public static Collection<RouteDefinition> getRouteDefinitions() {
         log.info("route loading: ROUTE_DEFINITION_MAP: {}", ROUTE_DEFINITION_MAP);
         return ROUTE_DEFINITION_MAP.values();
     }
 
-    public void save(String id, RouteDefinition routeDefinition) {
-        ROUTE_DEFINITION_MAP.put(id, routeDefinition);
+    public static void save(RouteDefinition routeDefinition) {
+        ROUTE_DEFINITION_MAP.put(routeDefinition.getId(), routeDefinition);
     }
 
-    public void remove(String id) {
+    public static void remove(String id) {
         ROUTE_DEFINITION_MAP.remove(id);
     }
 }
